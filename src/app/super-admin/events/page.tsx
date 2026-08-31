@@ -15,6 +15,7 @@ import {
   Clock,
   Globe,
   Pencil,
+  Lock,
 } from 'lucide-react';
 
 interface EventItem {
@@ -30,6 +31,12 @@ interface EventItem {
   starts_at: string | null;
   ends_at: string | null;
   created_at: string | null;
+  submission_config?: {
+    private_access?: {
+      is_private?: boolean;
+      secret_id?: string;
+    };
+  } | null;
   _count: { event_registrations: number };
 }
 
@@ -99,56 +106,76 @@ export default function SuperAdminEventsPage() {
 
   const handleDelete = async (id: string) => {
     setActionLoading(id + 'delete');
-    await fetch(`/api/admin/super/events/${id}`, { method: 'DELETE' });
-    setActionLoading(null);
-    setDeleteConfirm(null);
-    fetchEvents();
+    try {
+      await fetch(`/api/admin/super/events/${id}`, { method: 'DELETE' });
+      setDeleteConfirm(null);
+      fetchEvents();
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   return (
     <AdminLayout>
-      <div className="max-w-6xl mx-auto flex flex-col gap-8">
-        {}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <CalendarDays size={22} className="text-[#E873C3]" />
-              <h1 className="text-2xl font-black text-white">Events Management</h1>
-            </div>
-            <p className="text-sm text-white/40">Create, publish, and control all platform events.</p>
+      <div className="flex flex-col gap-6 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-black text-white flex items-center gap-2">
+              <CalendarDays size={24} className="text-[#E873C3]" /> Events Management
+            </h1>
+            <p className="text-sm text-white/50 mt-1">Manage hackathons, coding contests, and events</p>
           </div>
           <Link
             href="/super-admin/events/create"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
-            style={{ background: 'linear-gradient(135deg, #E873C3, #8D37D6)', boxShadow: '0 4px 20px rgba(232,115,195,0.4)' }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-black bg-[#E873C3] hover:bg-[#E873C3]/90 transition-all shadow-[0_0_20px_rgba(232,115,195,0.3)] hover:shadow-[0_0_25px_rgba(232,115,195,0.5)] shrink-0 cursor-pointer"
           >
-            <Plus size={16} />
-            Create Event
+            <Plus size={16} /> Create Event
           </Link>
         </div>
 
-        {}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: 'Total Events', value: total, icon: CalendarDays, color: '#E873C3', glow: 'rgba(232,115,195,0.3)' },
-            { label: 'Published', value: events.filter(e => e.status === 'published').length, icon: Globe, color: '#3DCB7F', glow: 'rgba(61,203,127,0.3)' },
-            { label: 'Ongoing', value: events.filter(e => e.status === 'ongoing').length, icon: Zap, color: '#E873C3', glow: 'rgba(232,115,195,0.3)' },
-            { label: 'Total Signups', value: events.reduce((s, e) => s + e._count.event_registrations, 0), icon: Users, color: '#4ECDC4', glow: 'rgba(78,205,196,0.3)' },
-          ].map(({ label, value, icon: Icon, color, glow }) => (
-            <div key={label} className="relative bg-white/[0.04] border border-white/[0.07] rounded-2xl p-4 overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-xl" style={{ background: glow }} />
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-white/40 uppercase tracking-wider">{label}</span>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: glow, border: `1px solid ${color}30` }}>
-                  <Icon size={13} style={{ color }} />
-                </div>
-              </div>
-              <div className="text-2xl font-black text-white">{value.toLocaleString()}</div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+              <CalendarDays size={18} className="text-purple-400" />
             </div>
-          ))}
+            <div>
+              <div className="text-xl font-bold text-white">{total}</div>
+              <div className="text-xs text-white/40">Total Events</div>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center">
+              <Zap size={18} className="text-pink-400" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-white">{events.filter(e => e.status === 'ongoing').length}</div>
+              <div className="text-xs text-white/40">Live Events</div>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+              <Globe size={18} className="text-green-400" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-white">{events.filter(e => e.status === 'published').length}</div>
+              <div className="text-xs text-white/40">Published</div>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <Users size={18} className="text-amber-400" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-white">
+                {events.reduce((acc, e) => acc + (e._count?.event_registrations ?? 0), 0)}
+              </div>
+              <div className="text-xs text-white/40">Total Registrations</div>
+            </div>
+          </div>
         </div>
 
-        {}
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
@@ -173,7 +200,7 @@ export default function SuperAdminEventsPage() {
           </select>
         </div>
 
-        {}
+        {/* Events Table */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
           {loading ? (
             <div className="flex flex-col gap-2 p-4">
@@ -193,12 +220,17 @@ export default function SuperAdminEventsPage() {
             <div className="divide-y divide-white/[0.05]">
               {events.map((event) => {
                 const sc = STATUS_COLORS[event.status] ?? STATUS_COLORS.draft;
+                const isPrivate = Boolean(event.submission_config?.private_access?.is_private);
                 return (
                   <div key={event.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 hover:bg-white/[0.03] transition-colors">
-                    {}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-bold text-white text-sm truncate">{event.title}</span>
+                        {isPrivate && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                            <Lock size={10} /> Private
+                          </span>
+                        )}
                         <span
                           className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
                           style={{ color: sc.text, background: sc.bg, border: `1px solid ${sc.border}` }}
@@ -214,9 +246,7 @@ export default function SuperAdminEventsPage() {
                       </div>
                     </div>
 
-                    {}
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                      {}
                       <select
                         value={event.status}
                         onChange={(e) => handleStatusChange(event.id, e.target.value)}
@@ -230,7 +260,6 @@ export default function SuperAdminEventsPage() {
                         <option value="archived">Archived</option>
                       </select>
 
-                      {}
                       <Link
                         href={`/super-admin/events/${event.id}`}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.12] transition-all cursor-pointer"
@@ -239,7 +268,6 @@ export default function SuperAdminEventsPage() {
                         <ChevronRight size={12} />
                       </Link>
 
-                      {}
                       {deleteConfirm === event.id ? (
                         <div className="flex items-center gap-1">
                           <button
@@ -251,17 +279,17 @@ export default function SuperAdminEventsPage() {
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
-                            className="px-2 py-1.5 rounded-lg text-xs font-bold text-white/40 hover:text-white/80 transition-colors cursor-pointer"
+                            className="px-2 py-1.5 rounded-lg text-xs text-white/50 hover:text-white cursor-pointer"
                           >
-                            ✕
+                            Cancel
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => setDeleteConfirm(event.id)}
-                          className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-red-500/60 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+                          className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                         >
-                          <Trash2 size={13} />
+                          <Trash2 size={14} />
                         </button>
                       )}
                     </div>
@@ -272,24 +300,26 @@ export default function SuperAdminEventsPage() {
           )}
         </div>
 
-        {}
+        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 rounded-xl text-sm font-bold text-white/50 bg-white/[0.04] border border-white/[0.07] hover:bg-white/[0.08] disabled:opacity-30 transition-all cursor-pointer"
-            >
-              ← Prev
-            </button>
-            <span className="text-sm text-white/40">{page} / {totalPages}</span>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-4 py-2 rounded-xl text-sm font-bold text-white/50 bg-white/[0.04] border border-white/[0.07] hover:bg-white/[0.08] disabled:opacity-30 transition-all cursor-pointer"
-            >
-              Next →
-            </button>
+          <div className="flex items-center justify-between text-xs text-white/40">
+            <div>Page {page} of {totalPages} ({total} events)</div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white disabled:opacity-30 hover:bg-white/[0.08] transition-colors cursor-pointer"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white disabled:opacity-30 hover:bg-white/[0.08] transition-colors cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

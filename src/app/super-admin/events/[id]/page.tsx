@@ -292,6 +292,24 @@ export default function EventControlPage() {
     referral_source: { enabled: true, required: false },
   });
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [secretId, setSecretId] = useState("");
+  const [secretPassword, setSecretPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const generateRandomSecretId = () => {
+    setSecretId("PVT-" + Math.random().toString(36).substring(2, 8).toUpperCase());
+  };
+
+  const generateRandomPassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+    let pass = "";
+    for (let i = 0; i < 10; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setSecretPassword(pass);
+  };
+
   const [settingsError, setSettingsError] = useState('');
   const [settingsSuccess, setSettingsSuccess] = useState('');
 
@@ -313,6 +331,11 @@ export default function EventControlPage() {
         setSubmissionMode(sc.mode ?? 'platform');
         setGoogleFormUrl(sc.google_form_url ?? '');
         setExternalLinkUrl(sc.external_link_url ?? '');
+
+        const pvt = ((sc as any)?.private_access) || {};
+        setIsPrivate(Boolean(pvt.is_private));
+        setSecretId(pvt.secret_id || '');
+        setSecretPassword(pvt.secret_password || '');
 
         if (sc.registration_fields_config) {
           setRegFieldsConfig(sc.registration_fields_config);

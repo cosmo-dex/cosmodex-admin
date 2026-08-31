@@ -7,7 +7,7 @@ import DateTimePicker from '@/components/admin/DateTimePicker';
 import {
   CalendarDays, Plus, Trash2, Save, UsersRound, Trophy, Layers,
   FileText, Link as LinkIcon, Globe, HelpCircle, CheckSquare, Code2,
-  ListChecks, Lightbulb, Scale, Sparkles, FileCode, Clock
+  ListChecks, Lightbulb, Scale, Sparkles, FileCode, Clock, Lock, Eye, EyeOff
 } from 'lucide-react';
 
 interface TimelineEntry { label: string; date: string; done: boolean }
@@ -112,6 +112,24 @@ export default function CreateEventPage() {
     referral_source: { enabled: true, required: false },
   });
 
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [secretId, setSecretId] = useState("");
+  const [secretPassword, setSecretPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const generateRandomSecretId = () => {
+    setSecretId("PVT-" + Math.random().toString(36).substring(2, 8).toUpperCase());
+  };
+
+  const generateRandomPassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+    let pass = "";
+    for (let i = 0; i < 10; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setSecretPassword(pass);
+  };
+
   const [submissionMode, setSubmissionMode] = useState<SubmissionMode>('platform');
   const [googleFormUrl, setGoogleFormUrl] = useState('');
   const [externalLinkUrl, setExternalLinkUrl] = useState('');
@@ -181,6 +199,11 @@ export default function CreateEventPage() {
     const config: Record<string, unknown> = {
       mode: eventType === 'hackathon' ? submissionMode : 'platform',
       required_fields: Object.entries(requiredFields).filter(([, v]) => v).map(([k]) => k),
+      private_access: {
+        is_private: isPrivate,
+        secret_id: isPrivate ? secretId.trim() : '',
+        secret_password: isPrivate ? secretPassword.trim() : '',
+      },
       hackathon_details: eventType === 'hackathon' ? {
         problem_statement: problemStatement,
         tracks: tracks,
@@ -223,6 +246,11 @@ export default function CreateEventPage() {
       registration_fee: registrationFee || 'Free',
       registration_fields_config: regFieldsConfig,
       submission_config: buildSubmissionConfig(),
+      private_access: {
+        is_private: isPrivate,
+        secret_id: isPrivate ? secretId.trim() : '',
+        secret_password: isPrivate ? secretPassword.trim() : '',
+      },
       rounds_json: eventType === 'hackathon' ? rounds.filter(r => r.title) : [],
       prizes_json: prizes.filter(p => p.rank),
       timeline_json: timeline.filter(t => t.label),

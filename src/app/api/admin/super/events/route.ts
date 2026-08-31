@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
           starts_at: true,
           ends_at: true,
           registration_deadline: true,
+          submission_config: true,
           created_at: true,
           updated_at: true,
           _count: { select: { event_registrations: true } },
@@ -98,6 +99,7 @@ export async function POST(req: NextRequest) {
       eligibility,
       registration_fee,
       submission_config,
+      private_access,
     } = body;
 
     if (!title || !event_type) {
@@ -105,6 +107,12 @@ export async function POST(req: NextRequest) {
     }
 
     const slug = generateSlug(title);
+
+    const mergedSubmissionConfig = {
+      ...(submission_config ?? { mode: 'platform', required_fields: ['submission_url', 'demo_url', 'video_url', 'tech_stack', 'description'] }),
+      registration_fields_config: body.registration_fields_config ?? null,
+      private_access: private_access ?? submission_config?.private_access ?? null,
+    };
 
     const event = await prisma.events.create({
       data: {
@@ -135,10 +143,7 @@ export async function POST(req: NextRequest) {
         prizes_json: prizes_json ?? [],
         eligibility: eligibility ?? 'Open to All',
         registration_fee: registration_fee ?? 'Free',
-        submission_config: {
-          ...(submission_config ?? { mode: 'platform', required_fields: ['submission_url', 'demo_url', 'video_url', 'tech_stack', 'description'] }),
-          registration_fields_config: body.registration_fields_config ?? null,
-        },
+        submission_config: mergedSubmissionConfig,
       },
     });
 

@@ -36,7 +36,10 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const existing = await prisma.events.findUnique({ where: { id }, select: { id: true, status: true, title: true } });
+    const existing = await prisma.events.findUnique({ 
+      where: { id }, 
+      select: { id: true, status: true, title: true, submission_config: true } 
+    });
     if (!existing) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
 
     const body = await req.json();
@@ -47,7 +50,7 @@ export async function PATCH(
       starts_at, ends_at, registration_deadline, status,
       participation_type, min_team_size, max_team_size,
       enter_event_url, rounds_json, prizes_json, eligibility, registration_fee,
-      submission_config,
+      submission_config, private_access,
     } = body;
 
     const VALID_STATUSES = ['draft', 'published', 'ongoing', 'ended', 'archived'];
@@ -81,13 +84,23 @@ export async function PATCH(
     if (prizes_json !== undefined) updateData.prizes_json = prizes_json;
     if (eligibility !== undefined) updateData.eligibility = eligibility;
     if (registration_fee !== undefined) updateData.registration_fee = registration_fee;
-    if (submission_config !== undefined) updateData.submission_config = submission_config;
+
+    // Handle submission_config merging
+    let currentConfig = (submission_config || existing.submission_config || {}) as Record<string, unknown>;
     if (body.registration_fields_config !== undefined) {
-      const currentConfig = (updateData.submission_config || body.submission_config || {}) as Record<string, unknown>;
-      updateData.submission_config = {
+      currentConfig = {
         ...currentConfig,
         registration_fields_config: body.registration_fields_config,
       };
+    }
+    if (private_access !== undefined) {
+      currentConfig = {
+        ...currentConfig,
+        private_access: private_access,
+      };
+    }
+    if (submission_config !== undefined || body.registration_fields_config !== undefined || private_access !== undefined) {
+      updateData.submission_config = currentConfig;
     }
 
     if (body.start_now) {
