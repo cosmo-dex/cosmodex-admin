@@ -41,6 +41,25 @@ interface RawDbBlog {
   updated_at?: Date;
 }
 
+export function getValidImageUrl(
+  url?: string | null,
+  fallback = 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop'
+): string {
+  if (!url || typeof url !== 'string') return fallback;
+  const trimmed = url.trim();
+  if (!trimmed) return fallback;
+  if (trimmed.startsWith('/')) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    try {
+      new URL(trimmed);
+      return trimmed;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
 function mapDbToBlogPost(row: RawDbBlog): BlogPostItem {
   return {
     id: row.id,
@@ -52,9 +71,9 @@ function mapDbToBlogPost(row: RawDbBlog): BlogPostItem {
     author: {
       name: row.author_name,
       role: row.author_role,
-      avatar: row.author_avatar,
+      avatar: getValidImageUrl(row.author_avatar, '/images/avatars/nebula.webp'),
     },
-    coverImage: row.cover_image,
+    coverImage: getValidImageUrl(row.cover_image),
     readTime: row.read_time,
     publishedAt: row.published_at,
     featured: Boolean(row.featured),
@@ -86,36 +105,8 @@ async function ensureTableAndSeed() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
     `);
-
-    const countRows = (await prisma.$queryRawUnsafe('SELECT count(*)::int as count FROM blogs;')) as { count: number }[];
-    const count = countRows[0]?.count ?? 0;
-
-    if (count === 0) {
-      for (const p of BLOG_POSTS) {
-        await prisma.$executeRawUnsafe(
-          `INSERT INTO blogs (
-            id, slug, title, excerpt, content, category, author_name, author_role, author_avatar, cover_image, read_time, published_at, featured, tags
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-          ON CONFLICT (slug) DO NOTHING;`,
-          p.id,
-          p.slug,
-          p.title,
-          p.excerpt,
-          p.content,
-          p.category,
-          p.author.name,
-          p.author.role,
-          p.author.avatar,
-          p.coverImage,
-          p.readTime,
-          p.publishedAt,
-          Boolean(p.featured),
-          p.tags || []
-        );
-      }
-    }
   } catch (err) {
-    console.error('[blogs] ensureTableAndSeed error:', err);
+    console.error('[blogs] ensureTable error:', err);
   }
 }
 
@@ -125,24 +116,13 @@ export async function getAllBlogs(): Promise<BlogPostItem[]> {
     const rows = (await prisma.$queryRawUnsafe(
       'SELECT * FROM blogs ORDER BY created_at DESC;'
     )) as RawDbBlog[];
-    return rows.map(mapDbToBlogPost);
+    if (rows && rows.length > 0) {
+      return rows.map(mapDbToBlogPost);
+    }
   } catch (err) {
     console.error('[getAllBlogs] error:', err);
-    return BLOG_POSTS.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title,
-      excerpt: p.excerpt,
-      content: p.content,
-      category: p.category,
-      author: p.author,
-      coverImage: p.coverImage,
-      readTime: p.readTime,
-      publishedAt: p.publishedAt,
-      featured: Boolean(p.featured),
-      tags: p.tags,
-    }));
   }
+  return [];
 }
 
 export async function getBlogBySlug(slug: string): Promise<BlogPostItem | null> {
@@ -152,28 +132,11 @@ export async function getBlogBySlug(slug: string): Promise<BlogPostItem | null> 
       'SELECT * FROM blogs WHERE slug = $1 LIMIT 1;',
       slug
     )) as RawDbBlog[];
-    if (rows.length > 0) {
+    if (rows && rows.length > 0) {
       return mapDbToBlogPost(rows[0]);
     }
   } catch (err) {
     console.error('[getBlogBySlug] error:', err);
-  }
-  const fallback = BLOG_POSTS.find((p) => p.slug === slug);
-  if (fallback) {
-    return {
-      id: fallback.id,
-      slug: fallback.slug,
-      title: fallback.title,
-      excerpt: fallback.excerpt,
-      content: fallback.content,
-      category: fallback.category,
-      author: fallback.author,
-      coverImage: fallback.coverImage,
-      readTime: fallback.readTime,
-      publishedAt: fallback.publishedAt,
-      featured: Boolean(fallback.featured),
-      tags: fallback.tags,
-    };
   }
   return null;
 }

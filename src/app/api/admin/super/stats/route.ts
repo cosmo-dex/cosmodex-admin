@@ -35,6 +35,16 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
+    let totalBlogs = 0;
+    try {
+      const blogCountRow = (await prisma.$queryRawUnsafe(
+        'SELECT count(*)::int as count FROM blogs;'
+      )) as { count: number }[];
+      totalBlogs = blogCountRow[0]?.count ?? 0;
+    } catch {
+      totalBlogs = 0;
+    }
+
     return NextResponse.json({
       totalUsers,
       activeUsers,
@@ -45,6 +55,7 @@ export async function GET(req: NextRequest) {
       totalProblems,
       totalSubmissions,
       dailyActiveUsers: recentLogins,
+      totalBlogs,
     });
   } catch (err) {
     console.error('[admin/super/stats] Error:', err);

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   CalendarDays,
   Bell,
+  Newspaper,
 } from 'lucide-react';
 
 interface PlatformStats {
@@ -26,6 +27,7 @@ interface PlatformStats {
   totalProblems: number;
   totalSubmissions: number;
   dailyActiveUsers: number;
+  totalBlogs?: number;
 }
 
 function StatCard({
@@ -67,6 +69,7 @@ function StatCard({
 
 const QUICK_LINKS = [
   { label: 'Manage Users', desc: 'Search, role changes, ban/unban', href: '/super-admin/users', icon: Users, color: '#E873C3' },
+  { label: 'Blog Management', desc: 'Publish, edit, and manage technical articles', href: '/super-admin/blogs', icon: Newspaper, color: '#D95FD1' },
   { label: 'Notifications', desc: 'Broadcast announcements & real-time alerts', href: '/super-admin/notifications', icon: Bell, color: '#E873C3' },
   { label: 'Events', desc: 'Create and manage hackathons, contests & more', href: '/super-admin/events', icon: CalendarDays, color: '#8D37D6' },
   { label: 'Create Admin', desc: 'Provision learning or arena admin accounts', href: '/super-admin/create-admin', icon: UserPlus, color: '#4ECDC4' },
@@ -121,7 +124,8 @@ export default function SuperAdminPage() {
               <StatCard label="Admin Accounts" value={stats.adminUsers} icon={Shield} color="#F5A623" glow="rgba(245,166,35,0.4)" />
               <StatCard label="Total Matches" value={stats.totalMatches} icon={Swords} color="#4ECDC4" glow="rgba(78,205,196,0.4)" />
               <StatCard label="Live Matches" value={stats.activeMatches} icon={TrendingUp} color="#8D37D6" glow="rgba(141,55,214,0.4)" />
-              <StatCard label="Battle Problems" value={stats.totalProblems} icon={Swords} color="#FF6B35" glow="rgba(255,107,53,0.4)" />
+              <StatCard label="Total Problems" value={stats.totalProblems} icon={Swords} color="#FF6B35" glow="rgba(255,107,53,0.4)" />
+              <StatCard label="Blog Articles" value={stats.totalBlogs ?? 0} icon={Newspaper} color="#D95FD1" glow="rgba(217,95,209,0.4)" />
               <StatCard label="DAU (24h)" value={stats.dailyActiveUsers} icon={Activity} color="#E873C3" glow="rgba(232,115,195,0.4)" />
             </div>
           ) : (

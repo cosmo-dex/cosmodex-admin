@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import Link from 'next/link';
 import CustomSelect from '@/components/ui/CustomSelect';
 import {
   Newspaper,
@@ -77,12 +76,12 @@ export default function AdminBlogsPage() {
   const [formCategory, setFormCategory] = useState('Engineering');
   const [formExcerpt, setFormExcerpt] = useState('');
   const [formContent, setFormContent] = useState('');
-  const [formAuthorName, setFormAuthorName] = useState('Shubham gharte');
-  const [formAuthorRole, setFormAuthorRole] = useState('Lead Architect & Founder');
+  const [formAuthorName, setFormAuthorName] = useState('');
+  const [formAuthorRole, setFormAuthorRole] = useState('');
   const [formAuthorAvatar, setFormAuthorAvatar] = useState('/images/avatars/nebula.webp');
-  const [formCoverImage, setFormCoverImage] = useState('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop');
+  const [formCoverImage, setFormCoverImage] = useState('');
   const [formReadTime, setFormReadTime] = useState('5 min read');
-  const [formTags, setFormTags] = useState('System Design, Architecture');
+  const [formTags, setFormTags] = useState('');
   const [formFeatured, setFormFeatured] = useState(false);
 
   const fetchBlogs = async () => {
@@ -155,13 +154,13 @@ export default function AdminBlogsPage() {
     setFormSlug('');
     setFormCategory('Engineering');
     setFormExcerpt('');
-    setFormContent('# New Article Title\n\nWrite your blog post content here using Markdown...');
-    setFormAuthorName('Shubham gharte');
-    setFormAuthorRole('Lead Architect & Founder');
+    setFormContent('');
+    setFormAuthorName('');
+    setFormAuthorRole('');
     setFormAuthorAvatar('/images/avatars/nebula.webp');
-    setFormCoverImage('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop');
+    setFormCoverImage('');
     setFormReadTime('5 min read');
-    setFormTags('WebSockets, System Design');
+    setFormTags('');
     setFormFeatured(false);
     setErrorMsg('');
     setActiveTab('write');
@@ -358,11 +357,10 @@ export default function AdminBlogsPage() {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === cat
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${selectedCategory === cat
                     ? 'bg-[#E873C3] text-white shadow-[0_0_12px_rgba(232,115,195,0.4)]'
                     : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/[0.08]'
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -449,14 +447,15 @@ export default function AdminBlogsPage() {
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <Link
-                        href={`/blog/${blog.slug}`}
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/blog/${blog.slug}`}
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="p-2 rounded-lg bg-white/[0.05] hover:bg-white/[0.12] text-white/70 hover:text-white transition-colors"
                         title="View Live Article"
                       >
                         <ExternalLink size={14} />
-                      </Link>
+                      </a>
 
                       <button
                         onClick={() => openEditModal(blog)}
@@ -684,18 +683,16 @@ export default function AdminBlogsPage() {
                       <button
                         type="button"
                         onClick={() => setActiveTab('write')}
-                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                          activeTab === 'write' ? 'bg-[#E873C3] text-white' : 'text-white/60 hover:text-white'
-                        }`}
+                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${activeTab === 'write' ? 'bg-[#E873C3] text-white' : 'text-white/60 hover:text-white'
+                          }`}
                       >
                         Write
                       </button>
                       <button
                         type="button"
                         onClick={() => setActiveTab('preview')}
-                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                          activeTab === 'preview' ? 'bg-[#E873C3] text-white' : 'text-white/60 hover:text-white'
-                        }`}
+                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${activeTab === 'preview' ? 'bg-[#E873C3] text-white' : 'text-white/60 hover:text-white'
+                          }`}
                       >
                         Preview
                       </button>

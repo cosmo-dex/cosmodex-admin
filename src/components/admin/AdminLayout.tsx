@@ -19,6 +19,7 @@ import {
   Bell,
   Layers,
   FileQuestion,
+  Newspaper,
 } from 'lucide-react';
 
 interface AdminUser {
@@ -39,6 +40,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { label: 'Overview', href: '/super-admin', icon: LayoutDashboard },
     { label: 'User Management', href: '/super-admin/users', icon: Users },
     { label: 'Notifications', href: '/super-admin/notifications', icon: Bell },
+    { label: 'Blog Management', href: '/super-admin/blogs', icon: Newspaper },
     { label: 'Events', href: '/super-admin/events', icon: CalendarDays },
     { label: 'Create Admin', href: '/super-admin/create-admin', icon: UserPlus },
     { label: 'Change Password', href: '/super-admin/change-password', icon: Key },
@@ -166,7 +168,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <nav className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/super-admin' &&
+                item.href !== '/learning-admin' &&
+                item.href !== '/arena-admin' &&
+                pathname.startsWith(item.href + '/'));
             return (
               <Link
                 key={item.href}

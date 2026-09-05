@@ -19,7 +19,7 @@ const ADMIN_ROLES = [
   {
     key: 'super_admin',
     label: 'Super Admin',
-    desc: 'Platform management, users, events, and notifications',
+    desc: 'Platform management, users, blogs, events, and notifications',
     icon: Shield,
     color: '#E873C3',
     glow: 'rgba(232,115,195,0.25)',
